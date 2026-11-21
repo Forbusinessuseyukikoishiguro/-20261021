@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>講座掲載申請書ジェネレーター ｜ うさうさ研修工房</title>
+<!--
+  講座掲載申請書ジェネレーター  Version: v1.2  Updated: 2026-11-21
+  Tests: 全225項目パス（単体76 / 結合73 / 統合19 / 実ブラウザChromium 57）／ オフライン単一HTML・CDNなし
+  確認範囲: Chromium実機で確認済み。Edge・Firefox・Safariは未確認
+  PRO: 未付与（実機4ブラウザの確認が済んでいないため）
+  面白きこともなき世を面白く
+  読み方: ① <style> 見た目 ／ ② <body> 画面 ／ ③ <script> 動き。心臓部は buildAll 関数。
+  変更履歴:
+    v1.2 2026-11-21 自己紹介テンプレ4種（標準／やさしい／経歴を見せる／短め）を追加。入力の自動保存・設定ファイルの保存と読み込み・初期値に戻す機能を追加
+    v1.1 2026-11-21 全角空白のみの入力を未入力扱いに／テーマ未入力時の案内／タイトル案の組み立てを整理／ボタン44px以上／刻印フッター追加。試験を追加
+    v1.0 2026-11-20 初版
+-->
+<style>
+:root{--bg:#fdf7f8;--sf:#fff;--bd:#ecd8dd;--rose:#b4506b;--deep:#7d3049;--soft:#f6e3e8;--ink:#2e2126;--sub:#6d5a60;--ok:#2f7a5b;--warn:#a6690f;--err:#a83232;--r:10px;--g:16px;
+--ui:"Helvetica Neue","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.7}
+header{display:flex;align-items:center;gap:12px;padding:14px var(--g);background:var(--sf);border-bottom:2px solid var(--rose)}
+h1{font-size:22px;margin:0;color:var(--deep)}h2{font-size:17px;margin:0 0 8px;color:var(--deep)}
+.wrap{max-width:1200px;margin:0 auto;padding:var(--g);display:grid;gap:var(--g);grid-template-columns:1fr}
+@media(min-width:900px){.wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.panel{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:var(--g)}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 2px}
+input,textarea{width:100%;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--ink)}
+textarea{min-height:90px}
+button{font:inherit;font-size:14px;min-height:44px;padding:6px 14px;border-radius:8px;border:1px solid var(--rose);background:var(--sf);color:var(--deep);cursor:pointer}
+button.main{background:var(--rose);color:#fff}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--deep);outline-offset:1px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.say{background:var(--soft);border-radius:var(--r);padding:10px 14px;font-weight:700}
+.card{border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;margin:10px 0}
+.hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.hd b{flex:1 1 auto}
+.badge{font-size:13px;padding:1px 8px;border-radius:99px;color:#fff}
+.ok{background:var(--ok)}.ng{background:var(--err)}.empty{background:var(--sub)}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0;font:inherit;line-height:1.8}
+.foot{display:flex;gap:12px;justify-content:center;padding:14px;color:var(--sub);font-size:13px;border-top:1px solid var(--bd)}
+select{width:100%;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--ink)}
+.warn{color:var(--err);font-size:13px}.sub{color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><!-- 仮置き：原本画像と差し替え --><ellipse cx="14" cy="12" rx="4" ry="10" fill="#f6e3e8" stroke="#b4506b"/><ellipse cx="26" cy="12" rx="4" ry="10" fill="#f6e3e8" stroke="#b4506b"/><circle cx="20" cy="27" r="10" fill="#fff" stroke="#b4506b"/><circle cx="16" cy="26" r="1.5" fill="#2e2126"/><circle cx="24" cy="26" r="1.5" fill="#2e2126"/></svg>
+<h1>講座掲載申請書ジェネレーター</h1>
+</header>
+<noscript><p style="padding:16px;font-weight:700">このツールはJavaScriptが必要です。ブラウザの設定でJavaScriptを有効にして、開き直してください。</p></noscript>
+<div class="wrap">
+<section class="panel" aria-label="入力">
+<h2>① 入力（初期値は例です。書き換えてください）</h2>
+<div class="bar"><button id="sv">設定をファイルに保存</button><button id="ld">設定ファイルを読み込む</button><button id="rs">初期値に戻す</button><input type="file" id="impf" accept=".json,application/json" hidden aria-label="設定ファイル"></div>
+<div class="sub" id="savemsg" role="status">入力は、このブラウザに自動で保存されます。</div>
+<label for="theme">講座テーマ</label><input id="theme" value="開発環境">
+<label for="target">対象者（ターゲット）</label><input id="target" value="プログラミング初心者">
+<label for="outcome">得られる成果</label><input id="outcome" value="配布まで一通りできる">
+<label for="hook">フック（任意）</label><input id="hook" value="環境構築で脱落しない！">
+<label for="name">講師名（ページに表示）</label><input id="name" value="石黒 友季子（うさうさ研修工房）">
+<label for="role">肩書</label><input id="role" value="IT研修講師・DXエンジニア">
+<label for="career">経歴・資格</label><textarea id="career">LPIC対策、新人向けのLinux・Python・Java研修、企業のDX・AI活用の相談に携わっています。LPIC-2、Python3エンジニア認定などの資格を持ち、ゲーム開発での品質保証（QA）の経験もあります。</textarea>
+<label for="style">指導の強み</label><textarea id="style">専門用語を身近な例えに置き換え、「最初につまずくポイント」を先回りして解説します。</textarea>
+<label for="mission">講座への思い</label><textarea id="mission">ソフトを使う側から、自分の手で便利なツールを作る側へ。難易度をなだらかに設計し、無理なく一歩ずつ進めます。</textarea>
+<label for="ptype">自己紹介テンプレ（肩書・経歴・強み・思いから自動で組み立てます）</label><select id="ptype"><option value="std">標準</option><option value="soft">やさしい（初心者向け）</option><option value="rec">経歴を見せる</option><option value="short">短め</option></select>
+<label for="feat">特徴・アピール（1行1項目）</label><textarea id="feat">最初の5分で完成品を動かせます。成功体験が先なので挫折しにくい設計です。
+難易度を8段階のなだらかな坂道に設計。苦しい区間の直後に回復の段階があります。
+購入者様限定で、コマンド早見表など7点の特典パックつきです。</textarea>
+<label for="aud">対象者（講座ページ用の文）</label><textarea id="aud">プログラミング初心者・新人エンジニア、社内で小さなツールを作りたい社会人</textarea>
+<label for="lec">講義（1行1講。番号は自動。例：触る〜完成品を5分で動かす〜）</label><textarea id="lec" style="min-height:150px">はじめに〜ゴールと8段階の坂道〜
+触る〜完成品を5分で動かす〜
+仕組み〜1枚の図で全体像をつかむ〜
+環境〜開発環境を整える〜
+起動〜取得して動かし確かめる〜
+ビルド〜配布物の中身を読む〜
+改修〜仕様・テスト・実装の順で直す〜
+試験〜結果を数字で残す〜
+作って配る〜自作と配布前の確認〜
+まとめ〜持ち帰る5つのこと〜</textarea>
+<label for="file">提出するPDFのファイル名</label><input id="file" value="開発環境入門_講義資料.pdf">
+<label for="avoid">避ける語（会社名・顧客名など。カンマ区切り）</label><input id="avoid" placeholder="例：〇〇株式会社,△△社">
+</section>
+<section class="panel" aria-live="polite" aria-label="出力">
+<h2>② 出力（入力すると自動で更新）</h2>
+<div class="say" id="say">入力すると、ここに結果が出ます。</div>
+<div class="bar"><button class="main" id="all">全部コピー</button><button id="dl">テキストで保存</button></div>
+<div id="out"></div>
+<p class="sub">会社名・URL・SNS名・「公務員」は自動で検査します。最終提出前に、フォームの規約も確認してください。</p>
+</section>
+</div>
+<footer class="foot"><span>うさうさ研修工房 ／ 講座掲載申請書ジェネレーター v1.2（Chromium確認済み）</span><span>2026-11-21</span></footer>
+<script>
+// ===== ③ 動きのブロック =====
+const LIM={title:40,lec:40,prof:1000,file:40};
+const len=s=>[...s].length;
+const lines=s=>s.split('\n').map(x=>x.trim()).filter(Boolean);
+function check(t,avoid){const r=[];if(t.includes('公務員'))r.push('「公務員」を含みます');
+ if(/https?:|www\.|\.com|\.co\.jp|[@＠]/i.test(t))r.push('URL・SNSアカウントらしい文字があります');
+ (avoid||[]).forEach(w=>{if(w&&t.includes(w))r.push('避ける語「'+w+'」を含みます')});return r;}
+function status(t,max,avoid){t=(t||'').trim();const n=len(t),p=check(t,avoid);if(!n)return{lv:'empty',n,p:['未入力です']};
+ if(max&&n>max)p.unshift((n-max)+'文字オーバーです');return{lv:p.length?'ng':'ok',n,p};}
+function titles(f){const g=k=>(f[k]||'').trim(),h=g('hook'),th=g('theme'),tg=g('target'),oc=g('outcome'),c=[];
+ if(th){c.push(h+th+'入門');if(oc)c.push(h+th+'入門！'+oc,h+th+'で'+oc+'講座');if(tg){c.push(tg+'のための'+th+'実践講座！');if(oc)c.push(tg+'のための'+th+'入門｜'+oc)}}
+ return [...new Set(c)];}
+function lectures(a){return a.map((l,i)=>/^第[\d０-９]+講/.test(l)?l:'第'+(i+1)+'講：'+l);}
+function features(a){return a.map(l=>'・'+l.replace(/^[・\-\s]+/,''));}
+const PT={std:1,soft:1,rec:1,short:1};
+function profile(f){const g=k=>(f[k]||'').trim(),role=g('role'),ca=g('career'),st=g('style'),mi=g('mission'),nm=g('name').replace(/[（(].*?[）)]/g,'').trim()||'講師',ty=g('ptype')||'std',L=(l,t)=>t?'【'+l+'】'+t:'';let p;
+ if(ty==='soft')p=['はじめまして、'+nm+'です。'+(ca?(role?role+'として、':'')+ca:role?role+'です。':''),st,mi,'はじめての方も、安心して始められます。'];
+ else if(ty==='rec')p=[role,L('経歴',ca),L('指導の特徴',st),L('講座への思い',mi)];
+ else if(ty==='short')p=[(role?role+'。':'')+st,mi];
+ else p=[role?role+'。'+ca:ca,st,mi];
+ return p.filter(Boolean).join('\n\n');}
+function pack(f){return JSON.stringify({v:1,f})}
+function unpack(s,ids){try{const o=JSON.parse(s);if(!o||o.v!==1||!o.f||typeof o.f!=='object')return null;const r={};
+ ids.forEach(k=>{const v=o.f[k];if(typeof v==='string'&&v.length<=20000&&(k!=='ptype'||PT[v]===1))r[k]=v});return Object.keys(r).length?r:null}catch(e){return null}}
+function buildAll(f){const av=(f.avoid||'').split(/[,、，]/).map(x=>x.trim()).filter(Boolean);const lec=lectures(lines(f.lec));
+ const items=[{k:'講師名',t:f.name,max:0},{k:'講師プロフィール',t:profile(f),max:LIM.prof},
+ ...titles(f).map((t,i)=>({k:'講座タイトル案'+(i+1),t,max:LIM.title,opt:true})),
+ {k:'講座の特徴・アピールポイント',t:features(lines(f.feat)).join('\n'),max:0},{k:'対象者',t:f.aud,max:0},
+ ...lec.map((t,i)=>({k:'講義'+(i+1),t,max:LIM.lec})),{k:'PDFファイル名',t:f.file,max:LIM.file}];
+ items.forEach(x=>{x.t=(x.t||'').trim();x.s=status(x.t,x.max,av)});return items;}
+function summary(items){if(!items.some(x=>x.opt))return{ok:false,msg:'講座テーマを入れると、タイトル案が出ます'};
+ const bad=items.filter(x=>!x.opt&&x.s.lv!=='ok').length;
+ if(bad)return{ok:false,msg:bad+'件、直す項目があります。赤・灰色の表示を確認してください'};
+ if(!items.some(x=>x.opt&&x.s.lv==='ok'))return{ok:false,msg:'40文字以内のタイトル案がありません。フックやテーマを短くしてください'};
+ return{ok:true,msg:'すべて規約の範囲内です。コピーして貼り付けられます'};}
+function allText(items){return items.filter(x=>!(x.opt&&x.s.lv!=='ok')).map(x=>'■ '+x.k+'（'+x.s.n+'文字）\n'+x.t).join('\n\n');}
+// ==CORE_END==
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+const ids=['theme','target','outcome','hook','name','role','career','style','mission','feat','aud','lec','file','avoid','ptype'];
+function copy(t,btn){const o=btn.dataset.o||(btn.dataset.o=btn.textContent);const done=()=>{btn.textContent='コピーしました';setTimeout(()=>btn.textContent=o,1200)};const fail=()=>{btn.textContent='手動で選択してコピーしてください';setTimeout(()=>btn.textContent=o,2500)};
+ if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done,()=>fb());else fb();
+ function fb(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=!!document.execCommand('copy')}catch(e){}a.remove();ok?done():fail()}}
+let cur=[];
+function render(){const f={};ids.forEach(i=>f[i]=$(i).value);cur=buildAll(f);const o=$('out');o.textContent='';
+ cur.forEach(x=>{const c=document.createElement('div');c.className='card';const h=document.createElement('div');h.className='hd';
+  const b=document.createElement('b');b.textContent=x.k;const g=document.createElement('span');g.className='badge '+x.s.lv;
+  g.textContent=(x.s.lv==='ok'?'OK ':x.s.lv==='ng'?'要修正 ':'')+x.s.n+(x.max?'/'+x.max:'')+'文字';
+  const bt=document.createElement('button');bt.textContent='コピー';bt.onclick=()=>copy(x.t,bt);
+  h.append(b,g,bt);const p=document.createElement('pre');p.textContent=x.t;c.append(h,p);
+  if(x.s.lv!=='ok'){const w=document.createElement('div');w.className='warn';w.textContent='⚠ '+x.s.p.join(' ／ ');c.append(w)}o.append(c)});
+ const s=summary(cur);$('say').textContent=s.msg;$('say').style.color=s.ok?'var(--ok)':'var(--err)';}
+const defs={};ids.forEach(i=>defs[i]=$(i).value);
+const KEY='usausa-koza-settings-v1';let tm=null;
+const say2=m=>{$('savemsg').textContent=m};
+const vals=()=>{const f={};ids.forEach(i=>f[i]=$(i).value);return f};
+const apply=r=>{Object.keys(r).forEach(k=>{$(k).value=r[k]});render()};
+function save(){try{localStorage.setItem(KEY,pack(vals()));const d=new Date();say2('自動保存しました（'+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')+'）')}catch(e){say2('このブラウザでは自動保存できません。「設定をファイルに保存」をお使いください')}}
+ids.forEach(i=>{$(i).addEventListener('input',()=>{render();clearTimeout(tm);tm=setTimeout(save,300)});$(i).addEventListener('change',()=>{render();clearTimeout(tm);tm=setTimeout(save,300)})});
+$('sv').onclick=()=>{clearTimeout(tm);save();const u=URL.createObjectURL(new Blob([pack(vals())],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='講座掲載申請書_設定.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),500);say2('設定をファイルに保存しました')};
+$('ld').onclick=()=>$('impf').click();
+$('impf').addEventListener('change',e=>{const fl=e.target.files[0];if(!fl)return;const fr=new FileReader();fr.onload=()=>{const r=unpack(String(fr.result),ids);if(!r){say2('設定ファイルを読み込めません。このツールで保存したファイルを選んでください');return}apply(r);save();say2('設定ファイルを読み込みました')};fr.readAsText(fl,'UTF-8');e.target.value=''});
+$('rs').onclick=()=>{if(!confirm('入力を初期値に戻します。よろしいですか？'))return;try{localStorage.removeItem(KEY)}catch(x){}apply(defs);say2('初期値に戻しました')};
+try{const r=unpack(localStorage.getItem(KEY)||'',ids);if(r){Object.keys(r).forEach(k=>{$(k).value=r[k]});say2('前回の設定を読み込みました')}}catch(e){}
+$('all').onclick=()=>copy(allText(cur),$('all'));
+$('dl').onclick=()=>{const u=URL.createObjectURL(new Blob([allText(cur)],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='講座掲載申請書.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),500)};
+render();}
+</script>
+</body>
+</html>
